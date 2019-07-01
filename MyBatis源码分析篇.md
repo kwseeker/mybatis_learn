@@ -128,7 +128,7 @@ List<QueryCallTicketListResp> selectCallTicketList(QueryCallTicketListReq req);
               //读取<properties></properties>中的属性
               // 1）<properties>节点可以有子节点，子节点会直接被当作属性值以键值对的方式读出
               // 2）<properties>可以通过source参数指定包含属性的本地文件
-              // 3）<properties>也可以通过url指定包含属性的远程文件，但是url和source只能两选一，否则报BuilderException
+              // 3）<properties>也可以通过url指定包含属性的文件，但是url和source只能两选一，否则报BuilderException
               // 4）从configuration中读取属性variables，configuration的variables属性从哪里来的？（TODO）
               //    找到configuration的定义处在 BaseBuilder 的构造方法中，按 Option + F7 发现这个构造方法有7个地方引用
               //    根据代码推测是 XMLConfigBuilder 的构造方法传入的 
@@ -137,18 +137,60 @@ List<QueryCallTicketListResp> selectCallTicketList(QueryCallTicketListReq req);
               //    public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties)
               // 5）前面读出的属性值会汇总到 defaults ，然后分别存入 parser 的 variables 变量 以及 configuration 的 variables
               propertiesElement(root.evalNode("properties"));
-              Properties settings = settingsAsProperties(root.evalNode("settings"));
+              
+              //读取<settings></settings>中的设置，完整的设置查看 http://www.mybatis.org/mybatis-3/zh/configuration.html
+              // 1）将所有设置项读取到 Properties 中，
+              // 2）对设置项进行校验确保设置可识别，然后返回 Properties 对象。
+              Properties settings = settingsAsProperties(root.evalNode("settings"));      
+              //如果<settings></settings>中有设置"vfsImpl",则加载实现类并赋值到 configuration 中 （TODO：vfsImpl设置项的作用？后面代码中寻找答案）
               loadCustomVfs(settings);
+              
+              //读取<typeAlias></typeAlias>中的<package>设置和<typeAlias>设置
+              //用于为类型指定一个简短的别名
+              // 1）如果是<package>设置则遍历加载并注册这个路径下所有的类（这些类一般是数据库表的映射类）；
+              // 2）如果是<typeAlias>则加载 type 指定的类并注册。
+              // 3）同样可以使用 @Alias 为数据库表映射类设置别名（TODO：）
               typeAliasesElement(root.evalNode("typeAliases"));
+              
+              //读取<plugins></plugins>中的设置，和前面的套路一样，读取plugin类路径，然后加载创建实例，并存入 configuration 中
+              //plugins指定的类用于在已映射语句执行过程中的某一点进行拦截调用，和spring的拦截器一样
               pluginElement(root.evalNode("plugins"));
+              
+              //读取<objectFactory></objectFactory>中的设置，读取 type 指定的类的路径 和 property参数，加载并创建实例，并存入 configuration 中
+              //用于创建自己的结果对象工厂，会覆盖默认的对象工厂 DefaultObjectFactory。
               objectFactoryElement(root.evalNode("objectFactory"));
+              
+              //读取<objectWrapperFactory></objectWrapperFactory>中的设置，读取 type 指定的类的路径加载并创建实例，并存入 configuration 中
+              //（TODO）用途不详，官方文档没有将这个配置项，看后面代码是怎么解析使用这个配置项的
               objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+              
+              //读取<reflectorFactory></reflectorFactory>中的设置，读取 type 指定的类的路径加载并创建实例，并存入 configuration 中
+              //（TODO）用途不详，官方文档没有将这个配置项，看后面代码是怎么解析使用这个配置项的
               reflectorFactoryElement(root.evalNode("reflectorFactory"));
+              
+              //前面的 settingsAsProperties() 只是读取设置项到 settings，这里是将settings设置项全部存储到 configuration 中
               settingsElement(settings);
-              // read it after objectFactory and objectWrapperFactory issue #631
+              
+              //读取<environments></environments>中的设置 并存入 configuration 中
+              //可以为开发、测试、生产环境指定使用不同的配置，也可以在具有相同Schema的多个生产数据库使用相同的SQL映射
+              //如果有多个数据库，就添加多个<environment>, 并为每种环境创建一个SqlSessionFactory（这种场景还没见到，至于分库分表对服务层看也只是一个数据源）
+              //<environments default>指定使用哪个环境
+              //<environment id> 指定此环境id
               environmentsElement(root.evalNode("environments"));
+              
+              //读取<databaseIdProvider></databaseIdProvider>中的设置，并存入 configuration 中
+              //（TODO）用途不详，说是多种数据库支持（一个项目使用多种数据库？），看后面代码是怎么解析使用这个配置项的
               databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+              
+              //读取<typeHandlers></typeHandlers>中的设置，并存入 configuration 中
+              //类型处理器设置，Mybatis 默认会加载一些类型处理器，查看 http://www.mybatis.org/mybatis-3/zh/configuration.html#typeHandlers
+              //这也是为什么我们在resultMap中不指定jdbcType时仍能成功转换，因为有默认的类型处理。
               typeHandlerElement(root.evalNode("typeHandlers"));
+              
+              //读取<mappers></mappers>中的设置，并存入 configuration 中
+              // 工作流程见下面的总结
+              //指定Mapper接口类
+              //也可以通过 @Mapper 注解指定
               mapperElement(root.evalNode("mappers"));
             } catch (Exception e) {
               throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -218,11 +260,143 @@ List<QueryCallTicketListResp> selectCallTicketList(QueryCallTicketListReq req);
 2）执行阶段：`PreparedStatementHandler.query()`, 在这个问题之加断点可以看到最完整的执行阶段的堆栈信息。  
 上面说的只是适用这个示例。不同的配置和sql类型可能对应不同的位置（反正都是数据刚生成且待返回之前）。
 
-最重要的方法：
+重要的成员：
+
++ Configuration (Configuration.java)
+    
+    存储全局的配置, 从上面分析可以看到整个初始化阶段都在装配这个实例 configuration。
+
++ MappedStatement (MappedStatement.java)
+    
+    是初始化完成后的结晶，每个Mapper接口的每个方法都会有个 MappedStatement 类型的实例，存储在 configuration 和 assistance 中。
+    通过这个类，可以在运行时，创建出 JDBC 的 Statement。
+
+重要的方法：
 
 + 配置读取
 
     `XMLConfigBuilder.parseConfiguration()`
 
-+ Mapper接口组装
++ Mapper接口方法组装
+
+    `XMLConfigBUilder.mapperElement()`
+    
+    1) 从Mappers中读取所有Mapper配置或者package值中的配置, 这个配置告诉Mybatis去哪里找映射文件；
+    
+        - mapper
+       
+            resource：通过相对目录路径指定；
+            url：使用URL指定；
+            class: 通过java包的路径指定（貌似需要在注解中定义sql语句）。
+            
+            三选一。
+    
+        - package    
+        
+            name：包含Mapper接口类的java package路径。
+    
+        mapper和package可以混合使用。
+        
+    2）以`<mapper class="top.kwseeker.mybatis.analysis.dao.TbCallRecordDao"/>`为例
+    
+        - 加载类
+        
+        - 注册 Mapper 类到 configuration
+        
+            ```
+            mapperRegistry.addMapper(type);
+            
+            public <T> void addMapper(Class<T> type) {
+                if (type.isInterface()) {
+                  if (hasMapper(type)) {
+                    throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
+                  }
+                  boolean loadCompleted = false;
+                  try {
+                    knownMappers.put(type, new MapperProxyFactory<T>(type));
+                    // It's important that the type is added before the parser is run
+                    // otherwise the binding may automatically be attempted by the
+                    // mapper parser. If the type is already known, it won't try.
+                    MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+                    parser.parse();
+                    loadCompleted = true;
+                  } finally {
+                    if (!loadCompleted) {
+                      knownMappers.remove(type);
+                    }
+                  }
+                }
+            }
+            ```
+            
+            先将这个Mapper类添加到knownMappers（存储已经映射好的Mapper类）中；
+            然后读取 configuration中 typeAliasRegistery typeHandlerRegistery 配置，
+            转换 resource 路径，创建 MapperAnnotationBuilder 注解解析器；
+            
+        - sql 注解解析 
+        
+            ```
+            public void parse() {
+                String resource = type.toString();
+                if (!configuration.isResourceLoaded(resource)) {
+                  loadXmlResource();
+                  configuration.addLoadedResource(resource);
+                  assistant.setCurrentNamespace(type.getName());
+                  parseCache();
+                  parseCacheRef();
+                  Method[] methods = type.getMethods();
+                  for (Method method : methods) {
+                    try {
+                      // issue #237
+                      if (!method.isBridge()) {
+                        parseStatement(method);
+                      }
+                    } catch (IncompleteElementException e) {
+                      configuration.addIncompleteMethod(new MethodResolver(this, method));
+                    }
+                  }
+                }
+                parsePendingMethods();
+            }
+            ``` 
+            
+            根据 Mapper 接口的类型，尝试加载其对应的 xml 文件
+    
+    3）`parseStatement()`
+    
+        获取参数类型；
+        获取自定义的XMLLanguageDriver; （TODO：什么时候加载进去的？）；
+        从注解中读取sqlSource（配置+sql脚本片段） `getSqlSourceFromAnnotations()` (这个方法获取Mapper接口类的某个方法的sql注解类型，
+        如：本例 "interface org.apache.ibatis.annotationb.Select",以及动态生成的sql注解类，以及sqlProvider注解类型；
+        然后解析注解中的sql语句)；
+        读取 Options.class 注解内容；
+        如果是 Insert / Update 操作，读取 SelectKey.class 注解内容，设置主键自增；
+        读取 ResultMap.class 注解内容，设置返回值映射；
+        构造 sql 的 MappedStatement(这个类包含了构造一个Statement的全部条件) `MapperBuilderAssistant.addMappedStatement()`；
+        将 MappedStatement 存入 configuration; 
+        将 statement 语句存储到 assistant;
+
+附录：
+
++ 如果想要学习XML文件如何解析，可以参考Mybatis XPathParser.java的实现
+
++ `MapperAnnotationBuilder.getSqlSourceFromAnnotations()` 本身也是注解解析处理的一个范例
+    
+    对注解工作原理不清楚可以研究下这个方法的细节实现。
+
+## typeHandler 的原理源码分析
+
+## 从源码理解 SqlSessionFactory 和 SqlSession 的声明周期
+
+## 从源码角度理解 resultMap 和 resultType 的区别
+
+结果映射 | 优点 | 缺点
+---|---|---
+resultType | 多表关联字段清楚知道，性能调优直观 | 需要创建很多实体类
+resultMap | 不需要写join语句 | N+1 问题
+
+N+1问题：
+使用 resultMap 做嵌套查询，总是进行 N+1次查询；即使只需要第一次查询结果中的数据。
+
+## 从源码理解嵌套查询流程
 
