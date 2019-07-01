@@ -4,7 +4,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="top.kwseeker.mybatis.usage.dao.BlogMapper">
 
-    <select id="selectBlog" parameterType="int" resultType="top.kwseeker.mybatis.usage.domain.Blog">
+    <!--<select id="selectBlog" parameterType="int" resultType="top.kwseeker.mybatis.usage.domain.Blog">-->
+    <!--设置类型别名后，resultType可以用别名代替-->
+    <select id="selectBlog" parameterType="int" resultType="BlogAlias">
         select * from t_blog where id = #{id}
     </select>
 

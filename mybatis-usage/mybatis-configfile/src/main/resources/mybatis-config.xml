@@ -19,8 +19,12 @@
         <!--&lt;!&ndash;<setting name="logImpl" value="LOG4J"/>&ndash;&gt;-->
     <!--</settings>-->
 
+    <!-- 配置类型别名 -->
     <typeAliases>
-
+        <!-- 设置类型别名，方法1 -->
+        <typeAlias alias="Blog" type="top.kwseeker.mybatis.usage.domain.Blog"/>
+        <!-- 设置类型别名，方法2, 为包下所有类指定别名，别名为类名 -->
+        <package name="top.kwseeker.mybatis.usage.domain"/>
     </typeAliases>
 
     <typeHandlers>

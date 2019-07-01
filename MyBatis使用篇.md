@@ -4,6 +4,28 @@
 
 #### 1.1 mybatis-config.xml
 
++ Mapper类类型别名 `typeAliases`
+
+    - `typeAlias` 为单个类型指定别名
+    
+    - `package + @Alias` 为包中所有类型指定别名（默认为类名），可以通过 @Alias 修改其中某个类别名
+
+        ```
+        public void registerAlias(Class<?> type) {
+            String alias = type.getSimpleName();
+            Alias aliasAnnotation = type.getAnnotation(Alias.class);
+            //如果类有 @Alias 注解，则使用注解中的别名覆盖 xml 中的别名
+            if (aliasAnnotation != null) {
+              alias = aliasAnnotation.value();
+            } 
+            registerAlias(alias, type);
+        }
+        ```
+    
+    `package + @Alias` 的优先级高于 `typeAlias`;
+    因为源码中`if...else...`先判断 `typeAliases` 中是否有 `package`节点，有的话则按 `package + @Alias`
+    设置别名。
+    
 + 多数据源
 
 + typeHandler（自定义类型转换）

@@ -17,6 +17,7 @@ public class BlogServiceImplTest {
     @Test
     public void getBlogById() {
         Blog blog = blogService.getBlogById(1);
+        System.err.println("Query Result: " + blog.toString());
         Assert.assertEquals("kwseeker", blog.getNickname());
     }
 }
