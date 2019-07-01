@@ -5,12 +5,18 @@
 
 <configuration>
 
-    <properties resource="config.properties">
-
+    <!--<properties resource="config.properties"/>-->
+    <properties>
+        <property name="db.driver" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="db.url" value="jdbc:mysql://127.0.0.1:3306/mybatis_learn?characterEncoding=utf8&amp;useSSL=true&amp;serverTimezone=UTC"/>
+        <property name="db.username" value="root"/>
+        <property name="db.password" value="112358flzt9t"/>
     </properties>
 
     <!--<settings>-->
-        <!--<setting name="logImpl" value="LOG4J"/>-->
+        <!--日志jar引入后mybatis会自动识别到-->
+        <!--&lt;!&ndash;配置Mybatis日志&ndash;&gt;-->
+        <!--&lt;!&ndash;<setting name="logImpl" value="LOG4J"/>&ndash;&gt;-->
     <!--</settings>-->
 
     <typeAliases>

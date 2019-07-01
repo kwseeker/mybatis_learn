@@ -1,4 +1,4 @@
-package top.kwseeker.util;
+package top.kwseeker.mybatis.usage.util;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;

@@ -1,6 +1,6 @@
-package top.kwseeker.dao;
+package top.kwseeker.mybatis.usage.dao;
 
-import top.kwseeker.pojo.Blog;
+import top.kwseeker.mybatis.usage.domain.Blog;
 
 public interface BlogMapper {
 
