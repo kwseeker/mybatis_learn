@@ -6,7 +6,7 @@
 
     <!--<select id="selectBlog" parameterType="int" resultType="top.kwseeker.mybatis.usage.domain.Blog">-->
     <!--设置类型别名后，resultType可以用别名代替-->
-    <select id="selectBlog" parameterType="int" resultType="BlogAlias">
+    <select id="selectBlog" parameterType="int" resultType="top.kwseeker.mybatis.usage.domain.Blog">
         select * from t_blog where id = #{id}
     </select>
 

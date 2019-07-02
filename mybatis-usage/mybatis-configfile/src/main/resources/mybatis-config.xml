@@ -11,6 +11,10 @@
         <property name="db.url" value="jdbc:mysql://127.0.0.1:3306/mybatis_learn?characterEncoding=utf8&amp;useSSL=true&amp;serverTimezone=UTC"/>
         <property name="db.username" value="root"/>
         <property name="db.password" value="112358flzt9t"/>
+        <property name="db1.driver" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="db1.url" value="jdbc:mysql://127.0.0.1:3307/mybatis_learn?characterEncoding=utf8&amp;useSSL=true&amp;serverTimezone=UTC"/>
+        <property name="db1.username" value="root"/>
+        <property name="db1.password" value="123456"/>
     </properties>
 
     <!--<settings>-->
@@ -32,13 +36,23 @@
     </typeHandlers>
 
     <environments default="development">
+        <!-- environment 只是设置不同环境下使用不同的数据库，并不能配置同时连接多数据 -->
         <environment id="development">
             <transactionManager type="JDBC"/>
-            <dataSource type="POOLED">
+            <dataSource type="POOLED">  <!-- POOLED 类型下还有一些和连接池相关的配置参数 -->
                 <property name="driver" value="${db.driver}"/>
                 <property name="url" value="${db.url}"/>
                 <property name="username" value="${db.username}"/>
                 <property name="password" value="${db.password}"/>
+            </dataSource>
+        </environment>
+        <environment id="product">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${db1.driver}"/>
+                <property name="url" value="${db1.url}"/>
+                <property name="username" value="${db1.username}"/>
+                <property name="password" value="${db1.password}"/>
             </dataSource>
         </environment>
     </environments>

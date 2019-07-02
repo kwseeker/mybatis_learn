@@ -28,6 +28,17 @@
     
 + 多数据源
 
+    比如数据库读写分离（一台主，多个从，主写从读）的时候可能需要配置连接多个数据源；
+    首先看下加载数据源配置的源码，由《MyBatis源码分析篇.md》可知道在 `XMLConfigBuilder.environmentsElement()`;
+    但是分析里面代码发现 xml 配置不能设置同时连接多数据库；
+    
+    但是官方文档给了通过API接口实现连接多数据库的方案
+    ```
+    SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environment);
+    SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environment, properties);
+    ```
+    要连接多个数据库就为每一个数据库创建一个 `SqlSessionFactory`, 通过传不同的 environment 实现。
+
 + typeHandler（自定义类型转换）
 
 + plugin

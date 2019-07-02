@@ -279,7 +279,7 @@ List<QueryCallTicketListResp> selectCallTicketList(QueryCallTicketListReq req);
 
 + Mapper接口方法组装
 
-    `XMLConfigBUilder.mapperElement()`
+    `XMLConfigBuilder.mapperElement()`
     
     1) 从Mappers中读取所有Mapper配置或者package值中的配置, 这个配置告诉Mybatis去哪里找映射文件；
     
