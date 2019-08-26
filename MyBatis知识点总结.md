@@ -1619,11 +1619,11 @@ Mybatis提供**查询缓存**，如果缓存中有数据就不用从数据库中
 
 Mybatis的查询**缓存总共有两级**，我们称之为一级缓存和二级缓存，如图：
 
-![1547170547236](../../../../13-%E5%BC%80%E8%AF%BE%E5%90%A7/03-%E5%A4%87%E8%AF%BE/01-mybatis/md/assets/1547170547236.png)               
+![1547170547236](../../../../13-%E5%BC%80%E8%AF%BE%E5%90%A7/03-%E5%A4%87%E8%AF%BE/01-mybatis/md/assets/1547170547236.png)
+
+![Mybatis缓存机制](picture/Mybatis缓存机制.png)               
 
 - 一级缓存是**SqlSession级别**的缓存。在操作数据库时需要构造 sqlSession对象，在对象中有一个数据结构（HashMap）用于存储缓存数据。不同的sqlSession之间的缓存数据区域（HashMap）是互相不影响的。
-
- 
 
 - 二级缓存是Mapper（namespace）级别的缓存。多个SqlSession去操作同一个Mapper的sql语句，多个SqlSession可以共用二级缓存，二级缓存是跨SqlSession的。
 

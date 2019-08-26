@@ -37,6 +37,9 @@ public class CallBillsServiceTest {
     @Test
     public void queryCallRecordInfo() {
         TbCallRecordInfo info = callBillsService.queryCallRecordInfo(1);
-        System.out.println();
+
+        //执行到这里，手动改一下数据库（Mybatis缓存应该不会刷新），查看返回结果，看是从一级缓存取出来的还是从数据库取出来的
+        TbCallRecordInfo info1 = callBillsService.queryCallRecordInfo(1);
+
     }
 }
